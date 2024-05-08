@@ -1,0 +1,511 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>web3</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.3.0/dist/web3.min.js"></script>
+
+</head>
+<body style="margin-top:0">
+    <h2>DAO Information</h2>
+    <p>DAO's purpose: <span id="purpose">loading...</span></p>
+    <p>How to join: <span id="howToJoin">loading...</span></p>
+    <p>Total proposals: <span id="total_proposals">loading...</span></p> <!-- line 12 -->
+    <div id="proposalTable"></div>
+    <script>
+        var contractAddress = '0x86578E884Fb55e68785976866Be4a785F0b1a6fb';
+
+        let web3 = new Web3('wss://andromeda.cs.virginia.edu/geth');
+
+        abi = [
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			}
+		],
+		"name": "NewProposal",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "bool",
+				"name": "result",
+				"type": "bool"
+			}
+		],
+		"name": "ProposalClosed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "bool",
+				"name": "position",
+				"type": "bool"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "voter",
+				"type": "address"
+			}
+		],
+		"name": "Voted",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "who",
+				"type": "address"
+			}
+		],
+		"name": "addMember",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			}
+		],
+		"name": "closeProposal",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "curator",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "howToJoin",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "who",
+				"type": "address"
+			}
+		],
+		"name": "isMember",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "minProposalDebatePeriod",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "debatingPeriod",
+				"type": "uint256"
+			}
+		],
+		"name": "newProposal",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "numberOfProposals",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "i",
+				"type": "uint256"
+			}
+		],
+		"name": "proposals",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "purpose",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "requestMembership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "reservedEther",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes4",
+				"name": "interfaceId",
+				"type": "bytes4"
+			}
+		],
+		"name": "supportsInterface",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "tokens",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "supportsProposal",
+				"type": "bool"
+			}
+		],
+		"name": "vote",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "a",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "pid",
+				"type": "uint256"
+			}
+		],
+		"name": "votedNo",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "a",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "pid",
+				"type": "uint256"
+			}
+		],
+		"name": "votedYes",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	}
+]; // the source has the full ABI, which is removed here for clarity
+
+        contract = new web3.eth.Contract(abi,contractAddress);
+
+        const loadDynamicData = async () => {
+            let purposeText = await contract.methods.purpose().call();
+            document.getElementById('purpose').innerHTML = purposeText;
+
+            let joinText = await contract.methods.howToJoin().call();
+            document.getElementById('howToJoin').innerHTML = joinText;
+
+            let totalProposals = await contract.methods.numberOfProposals().call();
+            document.getElementById('total_proposals').innerHTML = totalProposals;
+
+            fetchAndDisplayProposals();
+        }
+
+        function subscribeEvents() {
+            var options = { address: contractAddress };
+            var sub = web3.eth.subscribe('logs', options, function(err, event) {
+                if (!err)
+                    console.log("event error: " + event);
+            });
+            // Reload and recreate the table on new data:
+            sub.on('data', event => {
+                console.log("Data changed, reloading proposals...");
+                loadDynamicData();
+            });
+            sub.on('error', err => { throw err });
+        }
+
+        async function fetchAndDisplayProposals() {
+            const proposalCount = await contract.methods.numberOfProposals().call();
+            clearAndCreateTable(); // Clear the table and create headers each time new data is fetched
+            for (let i = 0; i < proposalCount; i++) {
+                const proposal = await contract.methods.proposals(i).call();
+                addProposalToTable(proposal, i);
+            }
+        }
+
+        function clearAndCreateTable() {
+            let table = document.getElementById("proposalTable");
+            table.innerHTML = `<table border="1">
+                <tr>
+                    <th>ID</th>
+                    <th>Recipient</th>
+                    <th>Amount (WEI)</th>
+                    <th>Description</th>
+                    <th>Voting Deadline</th>
+                    <th>Open?</th>
+                    <th>Did It Pass?</th>
+                    <th>Yes Votes</th>
+                    <th>No Votes</th>
+                    <th>Creator</th>
+                </tr>
+            </table>`;
+        }
+
+        function addProposalToTable(proposal, id) {
+            let table = document.getElementById("proposalTable").getElementsByTagName("table")[0];
+            let row = table.insertRow(-1);
+            let cell1 = row.insertCell(0);
+            let cell2 = row.insertCell(1);
+            let cell3 = row.insertCell(2);
+            let cell4 = row.insertCell(3);
+            let cell5 = row.insertCell(4);
+            let cell6 = row.insertCell(5);
+            let cell7 = row.insertCell(6);
+            let cell8 = row.insertCell(7);
+            let cell9 = row.insertCell(8);
+            let cell10 = row.insertCell(9);
+
+            cell1.innerHTML = id;
+            cell2.innerHTML = proposal[0]; // Recipient
+            cell3.innerHTML = proposal[1]; // Amount
+            cell4.innerHTML = proposal[2]; // Description
+            cell5.innerHTML = new Date(proposal[3]*1000).toLocaleString(); // Voting Deadline
+            cell6.innerHTML = proposal[4]; // Open
+            cell7.innerHTML = proposal[5]; // Did it pass
+            cell8.innerHTML = proposal[6]; // Yes Votes
+            cell9.innerHTML = proposal[7]; // No Votes
+            cell10.innerHTML = proposal[8]; // Creator
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            subscribeEvents();
+            loadDynamicData();
+        });
+    </script>
+</body>
+</html>
